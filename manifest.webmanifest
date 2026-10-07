@@ -1,0 +1,19 @@
+{
+  "name": "슈의 가계부",
+  "short_name": "슈의 가계부",
+  "description": "슈 전용 귀여운 자동 가계부",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fff8fa",
+  "theme_color": "#fff5f8",
+  "lang": "ko-KR",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
