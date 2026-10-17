@@ -55,17 +55,8 @@ h2{margin:4px 0 2px;font-size:20px}
 
 <main>
 <section id="home" class="view active">
-  <div class="card hero">
-    <div class="label">이번 달 지출 내역</div><div class="big" id="total">0원</div>
-  </div>
-  <div class="card">
-    <div class="row"><b>사용금액</b><small>목표 <span id="budgetText">150,000</span>원</small></div>
-    <div class="progress"><div class="bar" id="budgetBar"></div></div>
-    <div class="row"><span>사용 <b id="used">0원</b></span><span>남음 <b id="remain">150,000원</b></span></div>
-  </div>
-  <div class="grid2">
-    <div class="mini"><div class="label">이번 주</div><b id="weekTotal">0원</b></div>
-    <div class="mini"><div class="label">오늘</div><b id="todayTotal">0원</b></div>
+  <div class="card hero" style="text-align:center">
+    <div class="big" id="total" style="margin:6px 0">0원</div>
   </div>
   <div class="section-title">최근 지출</div><div class="card" id="recent"></div>
   <button class="cta" onclick="showView('add')">＋ 지출 기록하기</button>
@@ -177,13 +168,9 @@ function totals(){
  return {total:amount,need:0,want:amount};
 }
 function render(){
- const t=totals(), usedAmount=t.want, remainingAmount=Math.max(0,budget-usedAmount), pct=budget?Math.min(100,usedAmount/budget*100):0;
+ const t=totals(), usedAmount=t.want, pct=budget?Math.min(100,usedAmount/budget*100):0;
  total.textContent=fmt(t.want);
- document.getElementById('used').textContent=fmt(usedAmount);document.getElementById('remain').textContent=fmt(remainingAmount);budgetText.textContent=fmt(budget).replace('원','');budgetBar.style.width=pct+'%';
- const now=today, ds=now.toISOString().slice(0,10), day=now.getDay()||7, start=new Date(now);start.setDate(now.getDate()-day+1);start.setHours(0,0,0,0);
  const luxuryData=data.filter(x=>x.kind!=='필수');
- todayTotal.textContent=fmt(luxuryData.filter(x=>x.date===ds).reduce((s,x)=>s+x.amount,0));
- weekTotal.textContent=fmt(luxuryData.filter(x=>{let d=new Date(x.date+'T00:00:00');return d>=start&&d<=now}).reduce((s,x)=>s+x.amount,0));
  const sorted=[...luxuryData].sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
  recent.innerHTML=sorted.slice(0,5).map(itemHTML).join('')||'<div class="empty">아직 지출이 없어. 첫 기록을 남겨볼까? ♡</div>';
  const filtered=listFilter==='전체'?sorted:sorted.filter(x=>x.kind===listFilter);
