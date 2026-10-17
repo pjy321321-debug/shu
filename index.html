@@ -33,7 +33,7 @@ main{padding:10px 16px}
 .cta{width:100%;padding:15px;border-radius:17px;background:var(--pink);color:white;font-weight:800;font-size:16px}
 .section-title{font-weight:800;margin:18px 3px 9px}
 .item{display:flex;align-items:center;gap:10px;padding:12px 2px;border-bottom:1px solid var(--line)}.item:last-child{border-bottom:0}
-.dot{width:38px;height:38px;border-radius:14px;display:grid;place-items:center;background:#fff0f5}.item .grow{flex:1}.item small{color:var(--muted)}
+.dot{width:38px;height:38px;border-radius:14px;display:grid;place-items:center;background:#fff0f5}.item .grow{flex:1;min-width:0}.item small{color:var(--muted)}.expense-del{flex-shrink:0;padding:7px 9px;border-radius:10px;background:#fff0f5;color:#c66b8a;font-size:12px}
 .badge{font-size:11px;padding:4px 8px;border-radius:99px}.need{background:#eaf2fb;color:#6680a0}.want{background:#ffe5ee;color:#d05e82}
 .bottom{position:fixed;bottom:0;left:0;right:0;max-width:520px;margin:auto;height:70px;background:rgba(255,255,255,.96);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);z-index:10}
 .nav{background:none;color:var(--muted);font-size:11px}.nav.active{color:#db6e91;font-weight:800}.nav span{display:block;font-size:20px;margin-bottom:2px}
@@ -56,11 +56,10 @@ h2{margin:4px 0 2px;font-size:20px}
 <main>
 <section id="home" class="view active">
   <div class="card hero">
-    <div class="label">이번 달 사치 지출</div><div class="big" id="total">0원</div>
-    <div class="mini pinkbox"><div class="label">다른 앱 지출은 제외하고, 여기에는 사치 지출만 기록해 ♡</div><b id="wantTotal">0원</b></div>
+    <div class="label">이번 달 지출 내역</div><div class="big" id="total">0원</div>
   </div>
   <div class="card">
-    <div class="row"><b>♡ 사치비</b><small>목표 <span id="budgetText">150,000</span>원</small></div>
+    <div class="row"><b>사용금액</b><small>목표 <span id="budgetText">150,000</span>원</small></div>
     <div class="progress"><div class="bar" id="budgetBar"></div></div>
     <div class="row"><span>사용 <b id="used">0원</b></span><span>남음 <b id="remain">150,000원</b></span></div>
   </div>
@@ -78,7 +77,6 @@ h2{margin:4px 0 2px;font-size:20px}
     <div class="formrow"><label>날짜</label><input id="date" type="date"></div>
     <div class="formrow"><label>내용</label><input id="memo" placeholder="무엇을 샀어?"></div>
     <div class="formrow"><label>금액</label><input id="amount" type="number" inputmode="numeric" placeholder="0"></div>
-    <div class="formrow"><label>기록 종류</label><div class="mini pinkbox" style="text-align:center;color:#b85f83;font-weight:700">♡ 사치 지출로 기록돼</div></div>
     <div class="formrow"><label>카테고리</label><select id="cat"><option>식비</option><option>생활</option><option>교통</option><option>쇼핑</option><option>취미</option><option>고정비</option><option>기타</option></select></div>
     <button class="cta" onclick="addExpense()">저장하기</button>
   </div>
@@ -94,7 +92,7 @@ h2{margin:4px 0 2px;font-size:20px}
   <h2>10월 소비 통계</h2>
   <div class="card"><div class="row"><b>카테고리별 지출</b><small id="statsTotal">0원</small></div><div id="catStats"></div></div>
   <div class="card"><b>주차별 지출</b><div class="chartbar" id="weekChart"></div></div>
-  <div class="card"><div class="row"><b>사치비 사용률</b><b id="rate">0%</b></div><div class="progress"><div class="bar" id="rateBar"></div></div><small style="color:var(--muted)">월 사치비 예산을 얼마나 사용했는지 보여줘.</small></div>
+  <div class="card"><div class="row"><b>사용금액 목표 사용률</b><b id="rate">0%</b></div><div class="progress"><div class="bar" id="rateBar"></div></div><small style="color:var(--muted)">월 사용금액 목표를 얼마나 사용했는지 보여줘.</small></div>
 </section>
 
 <section id="lists" class="view">
@@ -123,7 +121,7 @@ h2{margin:4px 0 2px;font-size:20px}
 <section id="settings" class="view">
   <button class="back" onclick="showView('home')">‹ 돌아가기</button><h2>설정</h2>
   <div class="card">
-    <div class="formrow"><label>월 사치비 목표</label><input id="budgetInput" type="number"></div>
+    <div class="formrow"><label>월 사용금액 목표</label><input id="budgetInput" type="number"></div>
     <button class="cta" onclick="saveBudget()">목표 저장</button>
   </div>
   <div class="card">
@@ -170,14 +168,18 @@ function addExpense(){
  localStorage.setItem(KEY,JSON.stringify(data)); document.getElementById('memo').value='';document.getElementById('amount').value='';
  toast('지출을 저장했어 ♡'); showView('home');
 }
+function monthExpenses(){
+ const monthKey=`${today.getFullYear()}-${pad(today.getMonth()+1)}`;
+ return data.filter(x=>(x.date||'').slice(0,7)===monthKey && x.kind!=='필수');
+}
 function totals(){
- const luxury=data.filter(x=>x.kind!=='필수').reduce((s,x)=>s+x.amount,0);
- return {total:luxury,need:0,want:luxury};
+ const amount=monthExpenses().reduce((s,x)=>s+x.amount,0);
+ return {total:amount,need:0,want:amount};
 }
 function render(){
- const t=totals(), used=t.want, remain=Math.max(0,budget-used), pct=budget?Math.min(100,used/budget*100):0;
- total.textContent=fmt(t.want);wantTotal.textContent=fmt(t.want);
- used.textContent=fmt(used);remain.textContent=fmt(remain);budgetText.textContent=fmt(budget).replace('원','');budgetBar.style.width=pct+'%';
+ const t=totals(), usedAmount=t.want, remainingAmount=Math.max(0,budget-usedAmount), pct=budget?Math.min(100,usedAmount/budget*100):0;
+ total.textContent=fmt(t.want);
+ document.getElementById('used').textContent=fmt(usedAmount);document.getElementById('remain').textContent=fmt(remainingAmount);budgetText.textContent=fmt(budget).replace('원','');budgetBar.style.width=pct+'%';
  const now=today, ds=now.toISOString().slice(0,10), day=now.getDay()||7, start=new Date(now);start.setDate(now.getDate()-day+1);start.setHours(0,0,0,0);
  const luxuryData=data.filter(x=>x.kind!=='필수');
  todayTotal.textContent=fmt(luxuryData.filter(x=>x.date===ds).reduce((s,x)=>s+x.amount,0));
@@ -189,15 +191,16 @@ function render(){
  statsTotal.textContent=fmt(t.total); renderCats(); renderWeeks(); rate.textContent=Math.round(pct)+'%';rateBar.style.width=pct+'%';
  renderLists();
 }
-function itemHTML(x){return `<div class="item"><div class="dot">${x.kind==='사치'?'♡':'✓'}</div><div class="grow"><b>${escapeHtml(x.memo)}</b><br><small>${x.date} · ${x.cat}</small></div><span class="badge ${x.kind==='사치'?'want':'need'}">${x.kind}</span><b>${fmt(x.amount)}</b></div>`}
+function itemHTML(x){return `<div class="item"><div class="dot">♡</div><div class="grow"><b>${escapeHtml(x.memo)}</b><br><small>${x.date} · ${x.cat}</small></div><b>${fmt(x.amount)}</b><button class="expense-del" onclick="deleteExpense(${Number(x.id)})" aria-label="${escapeHtml(x.memo)} 삭제">삭제</button></div>`}
+function deleteExpense(id){if(!confirm('이 지출 기록을 삭제할까?'))return;data=data.filter(x=>Number(x.id)!==Number(id));localStorage.setItem(KEY,JSON.stringify(data));render();toast('지출 기록을 삭제했어.')}
 function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
 function filterList(f){listFilter=f;allFilter.classList.toggle('on',f==='전체');needFilter.classList.toggle('on',f==='필수');render()}
 function renderCats(){
- const cats=['식비','생활','교통','쇼핑','취미','고정비','기타'], sums=cats.map(c=>[c,data.filter(x=>x.kind!=='필수'&&x.cat===c).reduce((s,x)=>s+x.amount,0)]).filter(x=>x[1]>0), max=Math.max(1,...sums.map(x=>x[1]));
+ const cats=['식비','생활','교통','쇼핑','취미','고정비','기타'], sums=cats.map(c=>[c,monthExpenses().filter(x=>x.cat===c).reduce((s,x)=>s+x.amount,0)]).filter(x=>x[1]>0), max=Math.max(1,...sums.map(x=>x[1]));
  catStats.innerHTML=sums.length?sums.map(([c,n])=>`<div style="margin-top:13px"><div class="row"><span>${c}</span><b>${fmt(n)}</b></div><div class="progress"><div class="bar" style="width:${n/max*100}%"></div></div></div>`).join(''):'<div class="empty">아직 데이터가 없어.</div>';
 }
 function renderWeeks(){
- const weeks=[['1주차',1,4],['2주차',5,11],['3주차',12,18],['4주차',19,25],['5주차',26,31]], vals=weeks.map(w=>data.filter(x=>x.kind!=='필수'&&(()=>{let d=new Date(x.date+'T00:00:00').getDate();return d>=w[1]&&d<=w[2]})()).reduce((s,x)=>s+x.amount,0)), max=Math.max(1,...vals);
+ const weeks=[['1주차',1,4],['2주차',5,11],['3주차',12,18],['4주차',19,25],['5주차',26,31]], vals=weeks.map(w=>monthExpenses().filter(x=>{let d=new Date(x.date+'T00:00:00').getDate();return d>=w[1]&&d<=w[2]}).reduce((s,x)=>s+x.amount,0)), max=Math.max(1,...vals);
  weekChart.innerHTML=weeks.map((w,i)=>`<div class="chartcol"><div class="chartfill" style="height:${Math.max(3,vals[i]/max*90)}px"></div>${w[0]}<br>${vals[i]?Math.round(vals[i]/1000)+'천':'-'}</div>`).join('');
 }
 function renderLists(){
@@ -237,7 +240,7 @@ function moveWishToPlan(i){
   localStorage.setItem('shus_wishes_v1',JSON.stringify(wishes));localStorage.setItem('shus_plans_v1',JSON.stringify(plans));
   renderLists();toast('10월 사야 할 목록으로 옮겼어 ♡');
 }
-function saveBudget(){budget=Math.max(0,Number(budgetInput.value)||0);localStorage.setItem(BKEY,budget);toast('사치비 목표를 저장했어 ♡');render()}
+function saveBudget(){budget=Math.max(0,Number(budgetInput.value)||0);localStorage.setItem(BKEY,budget);toast('사용금액 목표를 저장했어 ♡');render()}
 function clearData(){if(confirm('모든 지출 기록을 삭제할까?')){data=[];localStorage.removeItem(KEY);render();toast('지출 기록을 모두 지웠어.')}}
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),1800)}
 render();
